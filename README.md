@@ -1,15 +1,17 @@
 # Porto Certo
 
-Sistema web em Flutter para venda de passagens fluviais. A aplicacao usa uma
-arquitetura Frontend-First com login obrigatorio antes do acesso as demais rotas.
+Sistema web para venda de passagens fluviais. O projeto usa Flutter Web no
+frontend, uma API REST em Node.js/Express no backend e PostgreSQL como banco de
+dados.
 
-## Estrutura do Projeto
+## Estrutura
 
 ```text
 .
 ├── backend/            # API REST Node.js + Express + PostgreSQL
 │   ├── db/             # Scripts SQL de schema e seed
-│   └── src/            # Codigo-fonte da API
+│   ├── src/            # Codigo-fonte da API
+│   └── .env.example    # Exemplo de configuracao local
 ├── docs/               # Documentacao, PDFs, modelos e atividades
 ├── lib/                # Codigo Flutter
 ├── test/               # Testes automatizados
@@ -22,180 +24,213 @@ arquitetura Frontend-First com login obrigatorio antes do acesso as demais rotas
 
 - Flutter instalado e configurado
 - Node.js e npm instalados
-- PostgreSQL instalado e acessivel
-- Navegador web disponivel
+- PostgreSQL instalado e rodando
+- Navegador web
 
-Confira se o Flutter esta pronto para uso:
+Verifique o Flutter:
 
 ```bash
 flutter doctor
 ```
 
-## Como acessar o projeto
-
-1. Entre na pasta do projeto:
+Verifique Node.js e npm:
 
 ```bash
-cd "/mnt/Documentos/UFAM/Períodos/3 periodo/Sistemas de banco de dados I"
+node --version
+npm --version
 ```
 
-2. Instale as dependencias Flutter:
+## Como Rodar Depois De Clonar
+
+Clone o repositorio e entre na pasta:
 
 ```bash
-flutter pub get
+git clone URL_DO_REPOSITORIO
+cd NOME_DA_PASTA_DO_PROJETO
 ```
 
-3. Prepare o backend:
+### 1. Preparar O PostgreSQL
+
+Crie um banco chamado `porto_certo`. Substitua `SUA_SENHA` pela senha real do
+usuario `postgres` da sua maquina.
+
+```bash
+psql "postgres://postgres:SUA_SENHA@localhost:5432/postgres" -c "CREATE DATABASE porto_certo;"
+```
+
+Se o banco ja existir, siga para o proximo passo.
+
+Teste a conexao:
+
+```bash
+psql "postgres://postgres:SUA_SENHA@localhost:5432/porto_certo"
+```
+
+Para sair do `psql`:
+
+```sql
+\q
+```
+
+### 2. Configurar O Backend
+
+Entre na pasta do backend:
 
 ```bash
 cd backend
+```
+
+Crie o arquivo `.env` a partir do exemplo:
+
+```bash
+cp .env.example .env
+```
+
+Edite o arquivo `backend/.env`:
+
+```env
+PORT=3000
+DATABASE_URL=postgres://postgres:SUA_SENHA@localhost:5432/porto_certo
+```
+
+Instale as dependencias:
+
+```bash
 npm install
+```
+
+Crie as tabelas:
+
+```bash
 npm run db:schema
+```
+
+Insira os dados iniciais:
+
+```bash
 npm run db:seed
+```
+
+Inicie a API:
+
+```bash
 npm run dev
 ```
 
-4. Em outro terminal, volte para a raiz e execute o Flutter:
-
-```bash
-cd "/mnt/Documentos/UFAM/Períodos/3 periodo/Sistemas de banco de dados I"
-flutter run -d web-server --web-hostname 127.0.0.1 --web-port 8080
-```
-
-5. Abra a URL exibida no terminal:
+A API deve ficar disponivel em:
 
 ```text
-http://127.0.0.1:8080
+http://127.0.0.1:3000/api
 ```
 
-Se a tela abrir em branco, pare o servidor com `Ctrl + C` no terminal e rode
-novamente em uma porta limpa:
+Teste em outro terminal:
 
 ```bash
-flutter clean
+curl http://127.0.0.1:3000/api/health
+```
+
+Resposta esperada:
+
+```json
+{"status":"ok"}
+```
+
+### 3. Rodar O Flutter Web
+
+Em outro terminal, volte para a raiz do projeto:
+
+```bash
+cd ..
+```
+
+Instale as dependencias Flutter:
+
+```bash
 flutter pub get
-flutter run -d web-server --web-hostname 127.0.0.1 --web-port 8081
 ```
 
-Depois acesse:
-
-```text
-http://127.0.0.1:8081
-```
-
-Outra alternativa e gerar a build web e servir os arquivos prontos:
+Rode no navegador:
 
 ```bash
-flutter build web
-python3 -m http.server 8082 --bind 127.0.0.1 --directory build/web
+flutter run -d web-server --web-hostname 127.0.0.1 --web-port 8082
 ```
 
-Nesse caso, acesse:
+Acesse:
 
 ```text
 http://127.0.0.1:8082
 ```
 
-## Credenciais de teste
-
-Use uma das credenciais mockadas para entrar no sistema:
+## Credenciais De Teste
 
 ```text
 Email: ana.costa@email.com
 Senha: senha123
 ```
-
-ou
 
 ```text
 Email: marcos.lima@email.com
 Senha: porto456
 ```
 
-## Testes
+## Funcionalidades
 
-Antes de testar, garanta que as dependencias do projeto foram instaladas:
+- Cadastro de passageiro
+- Login de passageiro
+- Atualizacao de perfil
+- Listagem de viagens disponiveis
+- Busca por origem, destino e data
+- Detalhes da viagem com embarcacao e paradas
+- Selecao de porto de embarque e desembarque
+- Calculo dinamico do valor do trecho
+- Compra simulada de passagem
+- Registro de passagem no PostgreSQL
 
-```bash
-flutter pub get
-```
-
-### Teste automatizado
-
-Execute todos os testes unitarios e de widget:
-
-```bash
-flutter test
-```
-
-O resultado esperado ao final e semelhante a:
+## Endpoints Principais
 
 ```text
-All tests passed!
+GET    /api/health
+POST   /api/auth/login
+POST   /api/passageiros
+PUT    /api/passageiros/:id
+GET    /api/viagens
+GET    /api/viagens/buscar?origem=...&destino=...&data=...
+GET    /api/viagens/:id
+POST   /api/passagens
+GET    /api/passageiros/:id/passagens
 ```
 
-### Analise estatica
+## Testes E Validacao
 
-Execute a analise do codigo Dart/Flutter:
+Analise estatica:
 
 ```bash
 dart analyze lib test
 ```
 
-O resultado esperado e:
-
-```text
-No issues found!
-```
-
-### Teste manual no navegador
-
-1. Inicie o projeto web:
+Testes automatizados:
 
 ```bash
-flutter run -d web-server --web-hostname 127.0.0.1 --web-port 8080
+flutter test
 ```
 
-Se a porta 8080 mostrar tela branca, use uma porta limpa:
+Build web:
 
 ```bash
-flutter run -d web-server --web-hostname 127.0.0.1 --web-port 8081
+flutter build web
 ```
 
-2. Acesse no navegador:
+Validar sintaxe do backend:
 
-```text
-http://127.0.0.1:8080
+```bash
+node --check backend/src/server.js
 ```
 
-3. Faca login com uma credencial de teste:
+## Observacoes Importantes
 
-```text
-Email: ana.costa@email.com
-Senha: senha123
-```
-
-4. Na tela inicial, preencha:
-
-- Origem
-- Destino
-- Data de ida
-
-5. Clique em `Buscar Viagens`.
-
-Se os campos estiverem validos, o sistema exibira uma mensagem como:
-
-```text
-Buscando viagens de Manaus para Parintins no dia 25/06/2026...
-```
-
-## Estrutura principal
-
-- `backend/`: API REST, configuracao do PostgreSQL e scripts SQL
-- `docs/`: documentacao do projeto, modelos e arquivos de apoio
-- `lib/screens/login_screen.dart`: tela de login responsiva
-- `lib/notifiers/auth_notifier.dart`: estado de autenticacao com `ChangeNotifier`
-- `lib/data/passageiro_mock_db.dart`: banco mockado de passageiros
-- `lib/models/passageiro.dart`: modelo `Passageiro`
-- `lib/app_router.dart`: rotas publicas e privadas com `go_router`
-- `test/`: testes unitarios e testes de widget
+- O arquivo `backend/.env` nao deve ser enviado ao GitHub.
+- Use `backend/.env.example` apenas como modelo.
+- O comando `npm run db:schema` recria as tabelas e apaga os dados atuais.
+- O comando `npm run db:seed` reinsere os dados iniciais.
+- Se a API estiver desligada, algumas telas do Flutter ainda possuem fallback
+  para dados mockados durante desenvolvimento.
